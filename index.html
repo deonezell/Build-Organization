@@ -163,7 +163,7 @@
             let feedback = `<p>Your organization has implemented a ${structureDescription} with ${deptApproach}.</p>`;
             
             // Add scenario-specific assessment
-            if (challengeNumber % 5 === 0) { // Tech startup
+            if (scenarioDescription.includes("Tech Startup")) { // Tech startup
               feedback += `<p>For a <strong>tech startup</strong> in a dynamic market:</p><ul>`;
               if (mechanisticScore > 6) {
                 feedback += `<li class="text-red-600">Your structure is too rigid and hierarchical for a fast-moving tech environment. Consider reducing formalization and flattening the hierarchy.</li>`;
@@ -184,7 +184,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (challengeNumber % 5 === 1) { // Banking
+            } else if (scenarioDescription.includes("Banking Institution")) { // Banking
               feedback += `<p>For a <strong>banking institution</strong> in a regulated environment:</p><ul>`;
               
               if (mechanisticScore < 4) {
@@ -204,7 +204,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (challengeNumber % 5 === 2) { // Luxury brand
+            } else if (scenarioDescription.includes("Luxury Brand")) { // Luxury brand
               feedback += `<p>For a <strong>luxury brand</strong> focused on customization:</p><ul>`;
               
               if (mechanisticScore > 7) {
@@ -224,7 +224,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (challengeNumber % 5 === 3) { // Restaurant chain
+            } else if (scenarioDescription.includes("Restaurant Chain")) { // Restaurant chain
               feedback += `<p>For a <strong>growing restaurant chain</strong>:</p><ul>`;
               
               if (hierarchyLevels > 7 && companySize < 4) {
@@ -246,7 +246,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (challengeNumber % 5 === 4) { // Manufacturing
+            } else if (scenarioDescription.includes("Manufacturing Company")) { // Manufacturing
               feedback += `<p>For a <strong>manufacturing company</strong> with high automation:</p><ul>`;
               
               if (mechanisticScore < 5 && technology > 7) {
@@ -605,7 +605,7 @@
                         max="10" 
                         value={industryType} 
                         disabled
-     className="w-full opacity-70 cursor-not-allowed"
+                        className="w-full opacity-70 cursor-not-allowed"
                       />
                     </label>
                   </div>
@@ -613,7 +613,7 @@
                   <div className="mb-4">
                     <label className="block mb-2">
                       Company Size
-                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
                         <span>Small</span>
                         <span>Large</span>
                       </div>
