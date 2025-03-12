@@ -11,15 +11,13 @@
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <!-- Babel for JSX -->
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <!-- Recharts for any charts -->
-    <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.min.js"></script>
 </head>
 <body class="bg-gray-100">
     <div id="root" class="container mx-auto py-8"></div>
 
     <script type="text/babel">
-        // Visualization components
         const OrganizationChart = ({ centralization, hierarchyLevels, spanOfControl, departmentalization }) => {
+          // Chart visualization code remains the same
           // Calculate visual parameters
           const levels = Math.max(2, Math.round(hierarchyLevels * 0.4) + 1); // 2-5 levels
           const width = Math.max(3, Math.round(spanOfControl * 0.7)); // 3-7 nodes per level
@@ -116,6 +114,7 @@
           
           // Game state
           const [challengeNumber, setChallengeNumber] = React.useState(0);
+          const [currentScenario, setCurrentScenario] = React.useState(""); // tech, banking, luxury, restaurant, manufacturing
           const [scenarioDescription, setScenarioDescription] = React.useState("");
           const [feedbackShown, setFeedbackShown] = React.useState(false);
           
@@ -162,8 +161,8 @@
             // Start feedback
             let feedback = `<p>Your organization has implemented a ${structureDescription} with ${deptApproach}.</p>`;
             
-            // Add scenario-specific assessment
-            if (scenarioDescription.includes("Tech Startup")) { // Tech startup
+            // Add scenario-specific assessment based on currentScenario
+            if (currentScenario === "tech") { // Tech startup
               feedback += `<p>For a <strong>tech startup</strong> in a dynamic market:</p><ul>`;
               if (mechanisticScore > 6) {
                 feedback += `<li class="text-red-600">Your structure is too rigid and hierarchical for a fast-moving tech environment. Consider reducing formalization and flattening the hierarchy.</li>`;
@@ -184,7 +183,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (scenarioDescription.includes("Banking Institution")) { // Banking
+            } else if (currentScenario === "banking") { // Banking
               feedback += `<p>For a <strong>banking institution</strong> in a regulated environment:</p><ul>`;
               
               if (mechanisticScore < 4) {
@@ -204,7 +203,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (scenarioDescription.includes("Luxury Brand")) { // Luxury brand
+            } else if (currentScenario === "luxury") { // Luxury brand
               feedback += `<p>For a <strong>luxury brand</strong> focused on customization:</p><ul>`;
               
               if (mechanisticScore > 7) {
@@ -224,7 +223,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (scenarioDescription.includes("Restaurant Chain")) { // Restaurant chain
+            } else if (currentScenario === "restaurant") { // Restaurant chain
               feedback += `<p>For a <strong>growing restaurant chain</strong>:</p><ul>`;
               
               if (hierarchyLevels > 7 && companySize < 4) {
@@ -246,7 +245,7 @@
               }
               
               feedback += `</ul>`;
-            } else if (scenarioDescription.includes("Manufacturing Company")) { // Manufacturing
+            } else if (currentScenario === "manufacturing") { // Manufacturing
               feedback += `<p>For a <strong>manufacturing company</strong> with high automation:</p><ul>`;
               
               if (mechanisticScore < 5 && technology > 7) {
@@ -345,6 +344,7 @@
             // Set environmental variables based on scenario
             switch(scenario) {
               case 0: // Tech startup
+                setCurrentScenario("tech");
                 setIndustryType(9); // Highly dynamic
                 setCompanySize(3); // Small
                 setTechnology(8); // High-tech
@@ -354,6 +354,7 @@
                 setScenarioDescription("Tech Startup: You're leading a small tech startup in a rapidly changing market with high competition. Create a structure that maximizes innovation and speed.");
                 break;
               case 1: // Banking
+                setCurrentScenario("banking");
                 setIndustryType(3); // Stable
                 setCompanySize(8); // Large
                 setTechnology(6); // Moderate tech
@@ -363,6 +364,7 @@
                 setScenarioDescription("Banking Institution: You're managing a large bank in a highly regulated environment. Structure your organization to ensure compliance while maintaining customer satisfaction.");
                 break;
               case 2: // Luxury brand
+                setCurrentScenario("luxury");
                 setIndustryType(5); // Moderately dynamic
                 setCompanySize(6); // Medium-large
                 setTechnology(5); // Moderate tech
@@ -372,6 +374,7 @@
                 setScenarioDescription("Luxury Brand: You're running a premium luxury brand focusing on high-end, customized products. Balance creativity with operational excellence.");
                 break;
               case 3: // Local restaurant chain
+                setCurrentScenario("restaurant");
                 setIndustryType(4); // Fairly stable
                 setCompanySize(2); // Small
                 setTechnology(3); // Low-tech
@@ -381,6 +384,7 @@
                 setScenarioDescription("Restaurant Chain: You're expanding a successful local restaurant into a regional chain. Design a structure that maintains quality while enabling growth.");
                 break;
               case 4: // Manufacturing company
+                setCurrentScenario("manufacturing");
                 setIndustryType(3); // Stable
                 setCompanySize(7); // Large
                 setTechnology(7); // High automation
@@ -489,7 +493,7 @@
             if (challengeNumber === 0 && scenarioDescription === "") {
               generateNewChallenge();
             }
-          }, [challengeNumber, scenarioDescription]);
+          }, []);
 
           return (
             <div className="p-6 max-w-6xl mx-auto">
@@ -613,7 +617,7 @@
                   <div className="mb-4">
                     <label className="block mb-2">
                       Company Size
-                        <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
                         <span>Small</span>
                         <span>Large</span>
                       </div>
@@ -702,7 +706,7 @@
 
                   <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm text-blue-800">
-                      <strong>Note:</strong> Environmental factors are fixed for each challenge scenario. Your task is to adjust the organizational structure to match these conditions.
+                      <strong>Current Scenario:</strong> {scenarioDescription}
                     </p>
                   </div>
                 </div>
@@ -741,7 +745,6 @@
                     <button 
                       className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
                       onClick={() => {
-                        // Generate narrative feedback about the current structure
                         setFeedbackShown(true);
                       }}
                     >
@@ -760,7 +763,7 @@
                 </div>
                 
                 <div className="p-4 bg-purple-50 rounded-lg mb-4">
-                  <h3 className="font-semibold mb-2">Challenge #{challengeNumber}: {scenarioDescription}</h3>
+                  <h3 className="font-semibold mb-2">Challenge #{challengeNumber}</h3>
                   <p className="mt-2">Your mission: Configure the optimal organizational structure to achieve the highest possible success score for this scenario. Can you reach 8.5 or higher?</p>
                 </div>
                 
@@ -829,6 +832,10 @@
                     <p>No specific insights to report based on current configuration.</p>
                   )}
                 </div>
+              </div>
+
+              <div className="mt-8 text-center text-gray-500 text-sm">
+                Organization Structure Simulation © 2025 | Based on organizational theory principles
               </div>
             </div>
           );
