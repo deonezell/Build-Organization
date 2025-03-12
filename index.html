@@ -1,820 +1,841 @@
-import React, { useState, useEffect } from 'react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizational Structure Simulation</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and dependencies -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- Recharts for any charts -->
+    <script src="https://unpkg.com/recharts@2.5.0/umd/Recharts.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div id="root" class="container mx-auto py-8"></div>
 
-// Visualization components
-const OrganizationChart = ({ centralization, hierarchyLevels, spanOfControl, departmentalization }) => {
-  // Calculate visual parameters
-  const levels = Math.max(2, Math.round(hierarchyLevels * 0.4) + 1); // 2-5 levels
-  const width = Math.max(3, Math.round(spanOfControl * 0.7)); // 3-7 nodes per level
-  const nodeSpacing = Math.max(40, 80 - (width * 5)); // Adjust spacing based on width
-  
-  // Determine the organization box color based on structure
-  const getStructureColor = () => {
-    // Determine if more mechanistic or organic
-    const mechanisticScore = (centralization + hierarchyLevels + (10 - spanOfControl)) / 3;
-    if (mechanisticScore > 7) return "#2563eb"; // More blue for mechanistic
-    if (mechanisticScore < 4) return "#16a34a"; // More green for organic
-    return "#8b5cf6"; // Purple for balanced
-  };
-  
-  const boxColor = getStructureColor();
-  
-  // Node colors based on departmentalization
-  const getDeptColor = () => {
-    if (departmentalization === "matrix") return "#f59e0b"; // Amber for matrix
-    if (departmentalization === "divisional") return "#ec4899"; // Pink for divisional
-    return "#0ea5e9"; // Sky blue for functional
-  };
-  
-  const generateLevelNodes = (level, nodesCount) => {
-    const nodes = [];
-    const levelWidth = level === 0 ? 1 : Math.min(nodesCount, level === 1 ? Math.ceil(width / 2) : width);
-    
-    for (let i = 0; i < levelWidth; i++) {
-      const nodeSize = level === 0 ? 32 : level === 1 ? 24 : 20;
-      const nodeColor = level === 0 ? boxColor : getDeptColor();
-      const opacity = level === levels - 1 ? 0.7 : 1;
-      
-      nodes.push(
-        <div 
-          key={`node-${level}-${i}`}
-          className="flex flex-col items-center"
-          style={{ opacity }}
-        >
-          <div 
-            className="rounded-full flex items-center justify-center mb-1"
-            style={{ 
-              backgroundColor: nodeColor, 
-              width: `${nodeSize}px`, 
-              height: `${nodeSize}px`,
-              margin: `0 ${nodeSpacing/2}px`
-            }}
-          >
-            {level === 0 && <span className="text-white text-xs">CEO</span>}
-          </div>
-          {level < levels - 1 && <div className="h-6 w-px bg-gray-400"></div>}
-        </div>
-      );
-    }
-    
-    return (
-      <div className="flex justify-center mb-2" key={`level-${level}`}>
-        {nodes}
-      </div>
-    );
-  };
-  
-  const generateChart = () => {
-    const chart = [];
-    for (let i = 0; i < levels; i++) {
-      chart.push(generateLevelNodes(i, width));
-    }
-    return chart;
-  };
-  
-  return (
-    <div className="p-4 bg-slate-100 rounded-lg shadow">
-      <div className="flex flex-col">
-        {generateChart()}
-      </div>
-    </div>
-  );
-};
-
-const OrganizationalStructureSimulation = () => {
-  // Organizational Structure Variables
-  const [centralization, setCentralization] = useState(5); // 1-10 scale
-  const [formalization, setFormalization] = useState(5);
-  const [hierarchyLevels, setHierarchyLevels] = useState(5);
-  const [spanOfControl, setSpanOfControl] = useState(5);
-  const [departmentalization, setDepartmentalization] = useState('functional'); // functional, divisional, matrix
-  
-  // Environmental Factors
-  const [industryType, setIndustryType] = useState(5); // 1-10 scale (1=very stable, 10=highly dynamic)
-  const [companySize, setCompanySize] = useState(5); // 1-10 scale (1=very small, 10=very large)
-  const [technology, setTechnology] = useState(5); // 1-10 scale (1=low tech, 10=high tech)
-  const [competition, setCompetition] = useState(5); // 1-10 scale (1=low, 10=high)
-  const [customerPreferences, setCustomerPreferences] = useState(5); // 1-10 scale (1=mass market, 10=luxury/customized)
-  const [regulation, setRegulation] = useState(5); // 1-10 scale (1=unregulated, 10=highly regulated)
-  
-  // Game state
-  const [challengeNumber, setChallengeNumber] = useState(0);
-  const [scenarioDescription, setScenarioDescription] = useState("");
-  const [feedbackShown, setFeedbackShown] = useState(false);
-  
-  // Calculated values
-  const [organizationalSuccess, setOrganizationalSuccess] = useState(0);
-  const [strengthsWeaknesses, setStrengthsWeaknesses] = useState([]);
-  const [structureType, setStructureType] = useState("");
-  
-  // Function to generate a new challenge scenario
-  const generateNewChallenge = () => {
-    // Pick a random scenario type (0-4)
-    const scenario = Math.floor(Math.random() * 5);
-    setChallengeNumber(prevChallenge => prevChallenge + 1);
-    
-    // Set environmental variables based on scenario
-    switch(scenario) {
-      case 0: // Tech startup
-        setIndustryType(9); // Highly dynamic
-        setCompanySize(3); // Small
-        setTechnology(8); // High-tech
-        setCompetition(8); // High competition
-        setCustomerPreferences(7); // Customized
-        setRegulation(2); // Low regulation
-        setScenarioDescription("Tech Startup: You're leading a small tech startup in a rapidly changing market with high competition. Create a structure that maximizes innovation and speed.");
-        break;
-      case 1: // Banking
-        setIndustryType(3); // Stable
-        setCompanySize(8); // Large
-        setTechnology(6); // Moderate tech
-        setCompetition(6); // Moderate competition
-        setCustomerPreferences(4); // Mix of mass/custom
-        setRegulation(9); // High regulation
-        setScenarioDescription("Banking Institution: You're managing a large bank in a highly regulated environment. Structure your organization to ensure compliance while maintaining customer satisfaction.");
-        break;
-      case 2: // Luxury brand
-        setIndustryType(5); // Moderately dynamic
-        setCompanySize(6); // Medium-large
-        setTechnology(5); // Moderate tech
-        setCompetition(7); // High competition
-        setCustomerPreferences(9); // Luxury/customized
-        setRegulation(4); // Moderate regulation
-        setScenarioDescription("Luxury Brand: You're running a premium luxury brand focusing on high-end, customized products. Balance creativity with operational excellence.");
-        break;
-      case 3: // Local restaurant chain
-        setIndustryType(4); // Fairly stable
-        setCompanySize(2); // Small
-        setTechnology(3); // Low-tech
-        setCompetition(8); // High competition
-        setCustomerPreferences(5); // Mix
-        setRegulation(5); // Moderate regulation
-        setScenarioDescription("Restaurant Chain: You're expanding a successful local restaurant into a regional chain. Design a structure that maintains quality while enabling growth.");
-        break;
-      case 4: // Manufacturing company
-        setIndustryType(3); // Stable
-        setCompanySize(7); // Large
-        setTechnology(7); // High automation
-        setCompetition(6); // Moderate competition
-        setCustomerPreferences(3); // Mass market
-        setRegulation(6); // Moderate-high regulation
-        setScenarioDescription("Manufacturing Company: You're running a large manufacturing operation with increasing automation. Balance efficiency with needed flexibility.");
-        break;
-    }
-    
-    // Reset structure variables to neutral values
-    setCentralization(5);
-    setFormalization(5);
-    setHierarchyLevels(5);
-    setSpanOfControl(5);
-    setDepartmentalization('functional');
-  };
-  
-  // Generate detailed narrative feedback
-  const generateNarrativeFeedback = () => {
-    // Calculate key scores
-    const mechanisticScore = (centralization + formalization + hierarchyLevels + (10 - spanOfControl)) / 4;
-    const organicScore = 10 - mechanisticScore;
-    
-    // Calculate fit scores
-    const industryFit = 10 - Math.abs(industryType - organicScore);
-    const sizeFit = 10 - Math.abs(companySize - mechanisticScore);
-    const techFit = technology > 5 ? 
-      (technology > 8 ? organicScore : (organicScore + mechanisticScore) / 2) : 
-      mechanisticScore;
-    const competitionFit = competition > 7 ? organicScore : mechanisticScore;
-    const customerFit = customerPreferences > 5 ? organicScore : mechanisticScore;
-    const regulationFit = regulation > 5 ? mechanisticScore : organicScore;
-    
-    // Structure description
-    let structureDescription = "";
-    if (mechanisticScore > 7) {
-      structureDescription = "highly mechanistic structure with top-down control, formalized procedures, and clear hierarchy";
-    } else if (mechanisticScore > 5) {
-      structureDescription = "moderately mechanistic structure with some formalization and defined hierarchy";
-    } else if (mechanisticScore > 3) {
-      structureDescription = "moderately organic structure emphasizing flexibility and empowerment";
-    } else {
-      structureDescription = "highly organic structure prioritizing adaptability and decentralized decision-making";
-    }
-    
-    // Department approach
-    const deptApproach = departmentalization === "matrix" ? 
-      "a matrix organization allowing cross-functional collaboration" : 
-      departmentalization === "divisional" ? 
-        "divisional groupings focused on products/customers" : 
-        "functional departments grouped by specialization";
-    
-    // Start feedback
-    let feedback = `<p>Your organization has implemented a ${structureDescription} with ${deptApproach}.</p>`;
-    
-    // Add scenario-specific assessment
-    if (challengeNumber % 5 === 0) { // Tech startup
-      feedback += `<p>For a <strong>tech startup</strong> in a dynamic market:</p><ul>`;
-      if (mechanisticScore > 6) {
-        feedback += `<li class="text-red-600">Your structure is too rigid and hierarchical for a fast-moving tech environment. Consider reducing formalization and flattening the hierarchy.</li>`;
-      } else {
-        feedback += `<li class="text-green-600">Your organic approach aligns well with the need for rapid innovation and adaptation in the tech sector.</li>`;
-      }
-      
-      if (departmentalization === "matrix" || departmentalization === "divisional") {
-        feedback += `<li class="text-green-600">${departmentalization === "matrix" ? "Matrix" : "Divisional"} organization works well for cross-functional innovation.</li>`;
-      }
-      
-      if (centralization > 7) {
-        feedback += `<li class="text-red-600">High centralization may bottleneck decision-making and slow down responses to market changes.</li>`;
-      }
-      
-      if (formalization > 7) {
-        feedback += `<li class="text-red-600">Excessive procedures and rules will stifle creativity and innovation in this tech environment.</li>`;
-      }
-      
-      feedback += `</ul>`;
-    } else if (challengeNumber % 5 === 1) { // Banking
-      feedback += `<p>For a <strong>banking institution</strong> in a regulated environment:</p><ul>`;
-      
-      if (mechanisticScore < 4) {
-        feedback += `<li class="text-red-600">Your structure is too informal for a highly regulated industry. Consider more formalization and clearer hierarchy.</li>`;
-      } else if (mechanisticScore > 6) {
-        feedback += `<li class="text-green-600">Your mechanistic approach provides the control and consistency needed in banking.</li>`;
-      }
-      
-      if (formalization < 5 && regulation > 7) {
-        feedback += `<li class="text-red-600">Low formalization creates compliance risks in this highly regulated industry.</li>`;
-      } else if (formalization > 7) {
-        feedback += `<li class="text-green-600">Strong procedures support regulatory compliance requirements.</li>`;
-      }
-      
-      if (departmentalization === "functional") {
-        feedback += `<li class="text-green-600">Functional departments work well for specialized banking operations.</li>`;
-      }
-      
-      feedback += `</ul>`;
-    } else if (challengeNumber % 5 === 2) { // Luxury brand
-      feedback += `<p>For a <strong>luxury brand</strong> focused on customization:</p><ul>`;
-      
-      if (mechanisticScore > 7) {
-        feedback += `<li class="text-red-600">Your structure is too rigid for creative luxury products. Consider more flexibility.</li>`;
-      } else if (mechanisticScore < 3) {
-        feedback += `<li class="text-red-600">While creativity is important, your structure lacks the discipline needed for consistent quality in luxury goods.</li>`;
-      } else {
-        feedback += `<li class="text-green-600">Your balanced structure enables both creativity and quality control.</li>`;
-      }
-      
-      if (departmentalization === "divisional") {
-        feedback += `<li class="text-green-600">Divisional structure works well for different product lines or market segments in luxury retail.</li>`;
-      }
-      
-      if (centralization > 8 && customerPreferences > 8) {
-        feedback += `<li class="text-red-600">High centralization prevents frontline staff from customizing experiences for high-end clients.</li>`;
-      }
-      
-      feedback += `</ul>`;
-    } else if (challengeNumber % 5 === 3) { // Restaurant chain
-      feedback += `<p>For a <strong>growing restaurant chain</strong>:</p><ul>`;
-      
-      if (hierarchyLevels > 7 && companySize < 4) {
-        feedback += `<li class="text-red-600">Too many management layers for a small restaurant operation creates unnecessary overhead.</li>`;
-      }
-      
-      if (spanOfControl < 4) {
-        feedback += `<li class="text-red-600">Narrow span of control (few employees per manager) is costly in the restaurant industry.</li>`;
-      }
-      
-      if (centralization > 7) {
-        feedback += `<li class="text-yellow-600">While centralization helps maintain brand consistency, consider allowing some local autonomy for regional preferences.</li>`;
-      } else if (centralization < 3) {
-        feedback += `<li class="text-yellow-600">While local autonomy is good, you need some standardization to maintain brand consistency.</li>`;
-      }
-      
-      if (departmentalization === "divisional" && competition > 7) {
-        feedback += `<li class="text-green-600">Divisional approach helps target different geographical markets effectively.</li>`;
-      }
-      
-      feedback += `</ul>`;
-    } else if (challengeNumber % 5 === 4) { // Manufacturing
-      feedback += `<p>For a <strong>manufacturing company</strong> with high automation:</p><ul>`;
-      
-      if (mechanisticScore < 5 && technology > 7) {
-        feedback += `<li class="text-red-600">Your structure is too organic for an automated manufacturing environment that requires standardization.</li>`;
-      } else if (mechanisticScore > 8) {
-        feedback += `<li class="text-green-600">Your mechanistic approach aligns well with the need for efficiency in manufacturing.</li>`;
-      }
-      
-      if (departmentalization === "functional") {
-        feedback += `<li class="text-green-600">Functional departments support specialized expertise in different manufacturing processes.</li>`;
-      }
-      
-      if (formalization < 5 && technology > 7) {
-        feedback += `<li class="text-red-600">Low formalization creates inconsistencies in automated processes.</li>`;
-      }
-      
-      if (hierarchyLevels > 8) {
-        feedback += `<li class="text-yellow-600">Your hierarchy may be excessive, creating communication delays in production decisions.</li>`;
-      }
-      
-      feedback += `</ul>`;
-    }
-    
-    // Add general assessment
-    feedback += `<p><strong>Overall Assessment:</strong></p><ul>`;
-    
-    if (organizationalSuccess >= 8.5) {
-      feedback += `<li class="text-green-600">Excellent structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Your organization is well-positioned for success in this context.</li>`;
-    } else if (organizationalSuccess >= 7) {
-      feedback += `<li class="text-yellow-600">Good structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Some adjustments could further improve performance.</li>`;
-    } else if (organizationalSuccess >= 5) {
-      feedback += `<li class="text-yellow-600">Moderate structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Consider significant adjustments to better align with your environment.</li>`;
-    } else {
-      feedback += `<li class="text-red-600">Poor structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Major restructuring is recommended.</li>`;
-    }
-    
-    // Add specific fit scores
-    const scoreColor = (score) => score >= 7.5 ? "text-green-600" : score >= 5 ? "text-yellow-600" : "text-red-600";
-    
-    feedback += `
-      <li class="${scoreColor(industryFit)}">Industry alignment: ${industryFit.toFixed(1)}/10</li>
-      <li class="${scoreColor(sizeFit)}">Size appropriateness: ${sizeFit.toFixed(1)}/10</li>
-      <li class="${scoreColor(techFit)}">Technology compatibility: ${techFit.toFixed(1)}/10</li>
-      <li class="${scoreColor(competitionFit)}">Competitive responsiveness: ${competitionFit.toFixed(1)}/10</li>
-      <li class="${scoreColor(regulationFit)}">Regulatory alignment: ${regulationFit.toFixed(1)}/10</li>
-    `;
-    
-    feedback += `</ul>`;
-    
-    // Add recommendations
-    feedback += `<p><strong>Key Recommendations:</strong></p><ul>`;
-    
-    if (industryFit < 6) {
-      if (industryType > 7 && mechanisticScore > 6) {
-        feedback += `<li>For your dynamic industry, consider a more organic structure with less formalization and hierarchy.</li>`;
-      } else if (industryType < 4 && mechanisticScore < 4) {
-        feedback += `<li>For your stable industry, consider a more mechanistic structure with clearer procedures.</li>`;
-      }
-    }
-    
-    if (sizeFit < 6) {
-      if (companySize > 7 && hierarchyLevels < 4) {
-        feedback += `<li>For your large organization, consider adding appropriate hierarchy levels to improve coordination.</li>`;
-      } else if (companySize < 4 && hierarchyLevels > 7) {
-        feedback += `<li>For your small organization, flatten the hierarchy to reduce overhead and improve agility.</li>`;
-      }
-    }
-    
-    if (competition > 7 && hierarchyLevels > 7) {
-      feedback += `<li>In your highly competitive market, reduce decision-making layers to improve response times.</li>`;
-    }
-    
-    if (regulation > 7 && formalization < 4) {
-      feedback += `<li>In your highly regulated environment, increase formalization to ensure compliance.</li>`;
-    }
-    
-    if (customerPreferences > 7 && centralization > 7) {
-      feedback += `<li>For your customization-focused market, empower front-line employees with more decision-making authority.</li>`;
-    }
-    
-    if (feedback.endsWith("<ul>")) {
-      feedback += `<li>Current structure is well-aligned with your environment. Continue monitoring as conditions change.</li>`;
-    }
-    
-    feedback += `</ul>`;
-    
-    return {__html: feedback};
-  };
-
-  // Calculate organizational success based on all variables
-  useEffect(() => {
-    // Calculate mechanistic vs organic score
-    const mechanisticScore = (centralization + formalization + hierarchyLevels + (10 - spanOfControl)) / 4;
-    const organicScore = 10 - mechanisticScore;
-    
-    // Determine structure type
-    let newStructureType = "";
-    if (mechanisticScore > 7) newStructureType = "Highly Mechanistic";
-    else if (mechanisticScore > 5) newStructureType = "Moderately Mechanistic";
-    else if (mechanisticScore > 3) newStructureType = "Moderately Organic";
-    else newStructureType = "Highly Organic";
-    
-    // Additional modifier based on departmentalization
-    if (departmentalization === "matrix") newStructureType += " Matrix";
-    else if (departmentalization === "divisional") newStructureType += " Divisional";
-    else newStructureType += " Functional";
-    setStructureType(newStructureType);
-    
-    // Calculate fit scores for different factors
-    const industryFit = 10 - Math.abs(industryType - organicScore);
-    const sizeFit = 10 - Math.abs(companySize - mechanisticScore);
-    const techFit = technology > 5 ? 
-      (technology > 8 ? organicScore : (organicScore + mechanisticScore) / 2) : 
-      mechanisticScore;
-    const competitionFit = competition > 7 ? organicScore : mechanisticScore;
-    const customerFit = customerPreferences > 5 ? organicScore : mechanisticScore;
-    const regulationFit = regulation > 5 ? mechanisticScore : organicScore;
-    
-    // Overall success calculation
-    const success = (
-      industryFit * 2 + 
-      sizeFit * 1.5 + 
-      techFit * 1.5 + 
-      competitionFit * 2 + 
-      customerFit * 1.5 + 
-      regulationFit * 1.5
-    ) / 10;
-    
-    setOrganizationalSuccess(Math.min(Math.max(success, 0), 10));
-    
-    // Identify strengths and weaknesses
-    const newStrengthsWeaknesses = [];
-    
-    // Check specific combinations
-    if (industryType > 7 && mechanisticScore > 6) {
-      newStrengthsWeaknesses.push("Warning: Fast-changing industry with mechanistic structure may struggle to adapt");
-    }
-    
-    if (competition > 7 && hierarchyLevels > 7) {
-      newStrengthsWeaknesses.push("Warning: High competition with slow decision-making could lead to loss of market share");
-    }
-    
-    if (hierarchyLevels < 4 && companySize > 7) {
-      newStrengthsWeaknesses.push("Warning: Structure too flat for company size - may lead to coordination issues");
-    }
-    
-    if (industryType > 7 && technology > 7 && formalization > 7) {
-      newStrengthsWeaknesses.push("Warning: Creative/tech industry with high formalization may limit innovation");
-    }
-    
-    // Add strengths
-    if (industryFit > 7) {
-      newStrengthsWeaknesses.push("Strength: Structure well-aligned with industry dynamics");
-    }
-    
-    if (competitionFit > 7) {
-      newStrengthsWeaknesses.push("Strength: Structure appropriate for competitive environment");
-    }
-    
-    if (techFit > 7) {
-      newStrengthsWeaknesses.push("Strength: Structure supports technological environment");
-    }
-    
-    setStrengthsWeaknesses(newStrengthsWeaknesses);
-    
-  }, [centralization, formalization, hierarchyLevels, spanOfControl, departmentalization, 
-      industryType, companySize, technology, competition, customerPreferences, regulation]);
-
-  const getSuccessColor = () => {
-    if (organizationalSuccess >= 7.5) return "text-green-600";
-    if (organizationalSuccess >= 5) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  // Initialize with a scenario if none exists
-  useEffect(() => {
-    if (challengeNumber === 0 && scenarioDescription === "") {
-      generateNewChallenge();
-    }
-  }, [challengeNumber, scenarioDescription]);
-
-  return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Organizational Structure Simulation</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Organizational Structure Variables */}
-        <div className="bg-slate-50 p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Organizational Structure Variables</h2>
+    <script type="text/babel">
+        // Visualization components
+        const OrganizationChart = ({ centralization, hierarchyLevels, spanOfControl, departmentalization }) => {
+          // Calculate visual parameters
+          const levels = Math.max(2, Math.round(hierarchyLevels * 0.4) + 1); // 2-5 levels
+          const width = Math.max(3, Math.round(spanOfControl * 0.7)); // 3-7 nodes per level
+          const nodeSpacing = Math.max(40, 80 - (width * 5)); // Adjust spacing based on width
           
-          <div className="mb-4">
-            <label className="block mb-2">
-              Centralization (Who makes decisions?)
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Low (Empowerment)</span>
-                <span>High (Top-down)</span>
+          // Determine the organization box color based on structure
+          const getStructureColor = () => {
+            // Determine if more mechanistic or organic
+            const mechanisticScore = (centralization + hierarchyLevels + (10 - spanOfControl)) / 3;
+            if (mechanisticScore > 7) return "#2563eb"; // More blue for mechanistic
+            if (mechanisticScore < 4) return "#16a34a"; // More green for organic
+            return "#8b5cf6"; // Purple for balanced
+          };
+          
+          const boxColor = getStructureColor();
+          
+          // Node colors based on departmentalization
+          const getDeptColor = () => {
+            if (departmentalization === "matrix") return "#f59e0b"; // Amber for matrix
+            if (departmentalization === "divisional") return "#ec4899"; // Pink for divisional
+            return "#0ea5e9"; // Sky blue for functional
+          };
+          
+          const generateLevelNodes = (level, nodesCount) => {
+            const nodes = [];
+            const levelWidth = level === 0 ? 1 : Math.min(nodesCount, level === 1 ? Math.ceil(width / 2) : width);
+            
+            for (let i = 0; i < levelWidth; i++) {
+              const nodeSize = level === 0 ? 32 : level === 1 ? 24 : 20;
+              const nodeColor = level === 0 ? boxColor : getDeptColor();
+              const opacity = level === levels - 1 ? 0.7 : 1;
+              
+              nodes.push(
+                <div 
+                  key={`node-${level}-${i}`}
+                  className="flex flex-col items-center"
+                  style={{ opacity }}
+                >
+                  <div 
+                    className="rounded-full flex items-center justify-center mb-1"
+                    style={{ 
+                      backgroundColor: nodeColor, 
+                      width: `${nodeSize}px`, 
+                      height: `${nodeSize}px`,
+                      margin: `0 ${nodeSpacing/2}px`
+                    }}
+                  >
+                    {level === 0 && <span className="text-white text-xs">CEO</span>}
+                  </div>
+                  {level < levels - 1 && <div className="h-6 w-px bg-gray-400"></div>}
+                </div>
+              );
+            }
+            
+            return (
+              <div className="flex justify-center mb-2" key={`level-${level}`}>
+                {nodes}
               </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={centralization} 
-                onChange={(e) => setCentralization(parseInt(e.target.value))} 
-                className="w-full"
-              />
-            </label>
-          </div>
+            );
+          };
           
-          <div className="mb-4">
-            <label className="block mb-2">
-              Formalization (How strict are the rules?)
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Low (Creativity)</span>
-                <span>High (Procedures)</span>
+          const generateChart = () => {
+            const chart = [];
+            for (let i = 0; i < levels; i++) {
+              chart.push(generateLevelNodes(i, width));
+            }
+            return chart;
+          };
+          
+          return (
+            <div className="p-4 bg-slate-100 rounded-lg shadow">
+              <div className="flex flex-col">
+                {generateChart()}
               </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={formalization} 
-                onChange={(e) => setFormalization(parseInt(e.target.value))} 
-                className="w-full"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Hierarchy Levels
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Flat (Fast decisions)</span>
-                <span>Tall (More control)</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={hierarchyLevels} 
-                onChange={(e) => setHierarchyLevels(parseInt(e.target.value))} 
-                className="w-full"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Span of Control (Employees per manager)
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Narrow (Oversight)</span>
-                <span>Wide (Autonomy)</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={spanOfControl} 
-                onChange={(e) => setSpanOfControl(parseInt(e.target.value))} 
-                className="w-full"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Departmentalization (How teams are grouped)
-              <select 
-                value={departmentalization} 
-                onChange={(e) => setDepartmentalization(e.target.value)} 
-                className="w-full mt-1 p-2 border border-gray-300 rounded"
-              >
-                <option value="functional">Functional (Specialized, efficient)</option>
-                <option value="divisional">Divisional (Customer/product focused)</option>
-                <option value="matrix">Matrix (Cross-functional, flexible but complex)</option>
-              </select>
-            </label>
-          </div>
-        </div>
-        
-        {/* Environmental Factors */}
-        <div className="bg-slate-50 p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">Environmental Factors</h2>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Industry Type
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Stable (Manufacturing)</span>
-                <span>Dynamic (Tech)</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={industryType} 
-                disabled
-                className="w-full opacity-70 cursor-not-allowed"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Company Size
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Small</span>
-                <span>Large</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={companySize}
-                disabled 
-                className="w-full opacity-70 cursor-not-allowed"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Technology & Automation
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Low-tech</span>
-                <span>High-tech</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={technology}
-                disabled 
-                className="w-full opacity-70 cursor-not-allowed"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Market Competition
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Low competition</span>
-                <span>High competition</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={competition}
-                disabled 
-                className="w-full opacity-70 cursor-not-allowed"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Customer Preferences
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Mass-market</span>
-                <span>Luxury/Customized</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={customerPreferences}
-                disabled 
-                className="w-full opacity-70 cursor-not-allowed"
-              />
-            </label>
-          </div>
-          
-          <div className="mb-4">
-            <label className="block mb-2">
-              Regulation & Legal Constraints
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
-                <span>Less regulated</span>
-                <span>Strictly regulated</span>
-              </div>
-              <input 
-                type="range" 
-                min="1" 
-                max="10" 
-                value={regulation}
-                disabled 
-                className="w-full opacity-70 cursor-not-allowed"
-              />
-            </label>
-          </div>
-
-          <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Environmental factors are fixed for each challenge scenario. Your task is to adjust the organizational structure to match these conditions.
-            </p>
-          </div>
-        </div>
-      </div>
-      
-      {/* Visual Organization Chart */}
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-xl font-semibold mb-4">Organization Visualization</h2>
-        <OrganizationChart 
-          centralization={centralization}
-          hierarchyLevels={hierarchyLevels}
-          spanOfControl={spanOfControl}
-          departmentalization={departmentalization}
-        />
-        <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-blue-600 mr-2"></div>
-            <span>Mechanistic Structure</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-green-600 mr-2"></div>
-            <span>Organic Structure</span>
-          </div>
-          <div className="flex items-center">
-            <div className="w-4 h-4 rounded-full bg-purple-600 mr-2"></div>
-            <span>Balanced Structure</span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Game Mode */}
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-lg border-t-4 border-purple-500">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Organization Builder Game</h2>
-          <div className="flex gap-2">
-            <button 
-              className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
-              onClick={() => {
-                // Generate narrative feedback about the current structure
-                const mechanisticScore = (centralization + formalization + hierarchyLevels + (10 - spanOfControl)) / 4;
-                setFeedbackShown(true);
-              }}
-            >
-              Get Feedback
-            </button>
-            <button 
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
-              onClick={() => {
-                generateNewChallenge();
-                setFeedbackShown(false);
-              }}
-            >
-              New Challenge
-            </button>
-          </div>
-        </div>
-        
-        <div className="p-4 bg-purple-50 rounded-lg mb-4">
-          <h3 className="font-semibold mb-2">Challenge #{challengeNumber}: {scenarioDescription}</h3>
-          <p className="mt-2">Your mission: Configure the optimal organizational structure to achieve the highest possible success score for this scenario. Can you reach 8.5 or higher?</p>
-        </div>
-        
-        <div className="bg-slate-50 p-4 rounded-lg mb-4">
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold">Current Score</h3>
-            <div className="text-2xl font-bold px-4 py-1 rounded-lg bg-white shadow border-2" style={{borderColor: organizationalSuccess >= 8.5 ? '#16a34a' : '#64748b'}}>
-              <span className={organizationalSuccess >= 8.5 ? 'text-green-600' : organizationalSuccess >= 7 ? 'text-yellow-600' : 'text-slate-600'}>
-                {organizationalSuccess.toFixed(1)}
-              </span>
-              <span className="text-gray-400">/10</span>
             </div>
-          </div>
-          {organizationalSuccess >= 8.5 && (
-            <div className="mt-2 p-2 bg-green-100 text-green-800 rounded">
-              🎉 Congratulations! You've created an optimal organizational structure for this environment!
-            </div>
-          )}
-        </div>
-        
-        {feedbackShown && (
-          <div className="bg-white p-4 rounded-lg border-l-4 border-blue-600 shadow mb-4">
-            <h3 className="font-semibold text-lg mb-2">Executive Consultant Feedback</h3>
-            <div className="prose" dangerouslySetInnerHTML={generateNarrativeFeedback()} />
-          </div>
-        )}
-      </div>
-      
-      {/* Results Section */}
-      <div className="mt-8 bg-white p-6 rounded-lg shadow-lg border-t-4 border-blue-500">
-        <h2 className="text-xl font-semibold mb-4">Organizational Success Analysis</h2>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-slate-50 p-4 rounded shadow">
-            <h3 className="font-semibold mb-2">Structure Type</h3>
-            <p className="text-lg">{structureType}</p>
-          </div>
-          
-          <div className="bg-slate-50 p-4 rounded shadow">
-            <h3 className="font-semibold mb-2">Success Score</h3>
-            <p className={`text-2xl font-bold ${getSuccessColor()}`}>
-              {organizationalSuccess.toFixed(1)} / 10
-            </p>
-          </div>
-          
-          <div className="bg-slate-50 p-4 rounded shadow">
-            <h3 className="font-semibold mb-2">Success Level</h3>
-            <p className={`text-lg font-medium ${getSuccessColor()}`}>
-              {organizationalSuccess >= 7.5 ? "High" : 
-               organizationalSuccess >= 5 ? "Moderate" : "Low"}
-            </p>
-          </div>
-        </div>
-        
-        <div className="bg-slate-50 p-4 rounded shadow">
-          <h3 className="font-semibold mb-2">Key Insights</h3>
-          {strengthsWeaknesses.length > 0 ? (
-            <ul className="list-disc pl-5">
-              {strengthsWeaknesses.map((item, index) => (
-                <li key={index} className={item.includes("Warning") ? "text-red-600" : "text-green-600"}>
-                  {item}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No specific insights to report based on current configuration.</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+          );
+        };
 
-export default OrganizationalStructureSimulation;
+        const OrganizationalStructureSimulation = () => {
+          // Organizational Structure Variables
+          const [centralization, setCentralization] = React.useState(5); // 1-10 scale
+          const [formalization, setFormalization] = React.useState(5);
+          const [hierarchyLevels, setHierarchyLevels] = React.useState(5);
+          const [spanOfControl, setSpanOfControl] = React.useState(5);
+          const [departmentalization, setDepartmentalization] = React.useState('functional'); // functional, divisional, matrix
+          
+          // Environmental Factors
+          const [industryType, setIndustryType] = React.useState(5); // 1-10 scale (1=very stable, 10=highly dynamic)
+          const [companySize, setCompanySize] = React.useState(5); // 1-10 scale (1=very small, 10=very large)
+          const [technology, setTechnology] = React.useState(5); // 1-10 scale (1=low tech, 10=high tech)
+          const [competition, setCompetition] = React.useState(5); // 1-10 scale (1=low, 10=high)
+          const [customerPreferences, setCustomerPreferences] = React.useState(5); // 1-10 scale (1=mass market, 10=luxury/customized)
+          const [regulation, setRegulation] = React.useState(5); // 1-10 scale (1=unregulated, 10=highly regulated)
+          
+          // Game state
+          const [challengeNumber, setChallengeNumber] = React.useState(0);
+          const [scenarioDescription, setScenarioDescription] = React.useState("");
+          const [feedbackShown, setFeedbackShown] = React.useState(false);
+          
+          // Calculated values
+          const [organizationalSuccess, setOrganizationalSuccess] = React.useState(0);
+          const [strengthsWeaknesses, setStrengthsWeaknesses] = React.useState([]);
+          const [structureType, setStructureType] = React.useState("");
+          
+          // Generate detailed narrative feedback
+          const generateNarrativeFeedback = () => {
+            // Calculate key scores
+            const mechanisticScore = (centralization + formalization + hierarchyLevels + (10 - spanOfControl)) / 4;
+            const organicScore = 10 - mechanisticScore;
+            
+            // Calculate fit scores
+            const industryFit = 10 - Math.abs(industryType - organicScore);
+            const sizeFit = 10 - Math.abs(companySize - mechanisticScore);
+            const techFit = technology > 5 ? 
+              (technology > 8 ? organicScore : (organicScore + mechanisticScore) / 2) : 
+              mechanisticScore;
+            const competitionFit = competition > 7 ? organicScore : mechanisticScore;
+            const customerFit = customerPreferences > 5 ? organicScore : mechanisticScore;
+            const regulationFit = regulation > 5 ? mechanisticScore : organicScore;
+            
+            // Structure description
+            let structureDescription = "";
+            if (mechanisticScore > 7) {
+              structureDescription = "highly mechanistic structure with top-down control, formalized procedures, and clear hierarchy";
+            } else if (mechanisticScore > 5) {
+              structureDescription = "moderately mechanistic structure with some formalization and defined hierarchy";
+            } else if (mechanisticScore > 3) {
+              structureDescription = "moderately organic structure emphasizing flexibility and empowerment";
+            } else {
+              structureDescription = "highly organic structure prioritizing adaptability and decentralized decision-making";
+            }
+            
+            // Department approach
+            const deptApproach = departmentalization === "matrix" ? 
+              "a matrix organization allowing cross-functional collaboration" : 
+              departmentalization === "divisional" ? 
+                "divisional groupings focused on products/customers" : 
+                "functional departments grouped by specialization";
+            
+            // Start feedback
+            let feedback = `<p>Your organization has implemented a ${structureDescription} with ${deptApproach}.</p>`;
+            
+            // Add scenario-specific assessment
+            if (challengeNumber % 5 === 0) { // Tech startup
+              feedback += `<p>For a <strong>tech startup</strong> in a dynamic market:</p><ul>`;
+              if (mechanisticScore > 6) {
+                feedback += `<li class="text-red-600">Your structure is too rigid and hierarchical for a fast-moving tech environment. Consider reducing formalization and flattening the hierarchy.</li>`;
+              } else {
+                feedback += `<li class="text-green-600">Your organic approach aligns well with the need for rapid innovation and adaptation in the tech sector.</li>`;
+              }
+              
+              if (departmentalization === "matrix" || departmentalization === "divisional") {
+                feedback += `<li class="text-green-600">${departmentalization === "matrix" ? "Matrix" : "Divisional"} organization works well for cross-functional innovation.</li>`;
+              }
+              
+              if (centralization > 7) {
+                feedback += `<li class="text-red-600">High centralization may bottleneck decision-making and slow down responses to market changes.</li>`;
+              }
+              
+              if (formalization > 7) {
+                feedback += `<li class="text-red-600">Excessive procedures and rules will stifle creativity and innovation in this tech environment.</li>`;
+              }
+              
+              feedback += `</ul>`;
+            } else if (challengeNumber % 5 === 1) { // Banking
+              feedback += `<p>For a <strong>banking institution</strong> in a regulated environment:</p><ul>`;
+              
+              if (mechanisticScore < 4) {
+                feedback += `<li class="text-red-600">Your structure is too informal for a highly regulated industry. Consider more formalization and clearer hierarchy.</li>`;
+              } else if (mechanisticScore > 6) {
+                feedback += `<li class="text-green-600">Your mechanistic approach provides the control and consistency needed in banking.</li>`;
+              }
+              
+              if (formalization < 5 && regulation > 7) {
+                feedback += `<li class="text-red-600">Low formalization creates compliance risks in this highly regulated industry.</li>`;
+              } else if (formalization > 7) {
+                feedback += `<li class="text-green-600">Strong procedures support regulatory compliance requirements.</li>`;
+              }
+              
+              if (departmentalization === "functional") {
+                feedback += `<li class="text-green-600">Functional departments work well for specialized banking operations.</li>`;
+              }
+              
+              feedback += `</ul>`;
+            } else if (challengeNumber % 5 === 2) { // Luxury brand
+              feedback += `<p>For a <strong>luxury brand</strong> focused on customization:</p><ul>`;
+              
+              if (mechanisticScore > 7) {
+                feedback += `<li class="text-red-600">Your structure is too rigid for creative luxury products. Consider more flexibility.</li>`;
+              } else if (mechanisticScore < 3) {
+                feedback += `<li class="text-red-600">While creativity is important, your structure lacks the discipline needed for consistent quality in luxury goods.</li>`;
+              } else {
+                feedback += `<li class="text-green-600">Your balanced structure enables both creativity and quality control.</li>`;
+              }
+              
+              if (departmentalization === "divisional") {
+                feedback += `<li class="text-green-600">Divisional structure works well for different product lines or market segments in luxury retail.</li>`;
+              }
+              
+              if (centralization > 8 && customerPreferences > 8) {
+                feedback += `<li class="text-red-600">High centralization prevents frontline staff from customizing experiences for high-end clients.</li>`;
+              }
+              
+              feedback += `</ul>`;
+            } else if (challengeNumber % 5 === 3) { // Restaurant chain
+              feedback += `<p>For a <strong>growing restaurant chain</strong>:</p><ul>`;
+              
+              if (hierarchyLevels > 7 && companySize < 4) {
+                feedback += `<li class="text-red-600">Too many management layers for a small restaurant operation creates unnecessary overhead.</li>`;
+              }
+              
+              if (spanOfControl < 4) {
+                feedback += `<li class="text-red-600">Narrow span of control (few employees per manager) is costly in the restaurant industry.</li>`;
+              }
+              
+              if (centralization > 7) {
+                feedback += `<li class="text-yellow-600">While centralization helps maintain brand consistency, consider allowing some local autonomy for regional preferences.</li>`;
+              } else if (centralization < 3) {
+                feedback += `<li class="text-yellow-600">While local autonomy is good, you need some standardization to maintain brand consistency.</li>`;
+              }
+              
+              if (departmentalization === "divisional" && competition > 7) {
+                feedback += `<li class="text-green-600">Divisional approach helps target different geographical markets effectively.</li>`;
+              }
+              
+              feedback += `</ul>`;
+            } else if (challengeNumber % 5 === 4) { // Manufacturing
+              feedback += `<p>For a <strong>manufacturing company</strong> with high automation:</p><ul>`;
+              
+              if (mechanisticScore < 5 && technology > 7) {
+                feedback += `<li class="text-red-600">Your structure is too organic for an automated manufacturing environment that requires standardization.</li>`;
+              } else if (mechanisticScore > 8) {
+                feedback += `<li class="text-green-600">Your mechanistic approach aligns well with the need for efficiency in manufacturing.</li>`;
+              }
+              
+              if (departmentalization === "functional") {
+                feedback += `<li class="text-green-600">Functional departments support specialized expertise in different manufacturing processes.</li>`;
+              }
+              
+              if (formalization < 5 && technology > 7) {
+                feedback += `<li class="text-red-600">Low formalization creates inconsistencies in automated processes.</li>`;
+              }
+              
+              if (hierarchyLevels > 8) {
+                feedback += `<li class="text-yellow-600">Your hierarchy may be excessive, creating communication delays in production decisions.</li>`;
+              }
+              
+              feedback += `</ul>`;
+            }
+            
+            // Add general assessment
+            feedback += `<p><strong>Overall Assessment:</strong></p><ul>`;
+            
+            if (organizationalSuccess >= 8.5) {
+              feedback += `<li class="text-green-600">Excellent structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Your organization is well-positioned for success in this context.</li>`;
+            } else if (organizationalSuccess >= 7) {
+              feedback += `<li class="text-yellow-600">Good structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Some adjustments could further improve performance.</li>`;
+            } else if (organizationalSuccess >= 5) {
+              feedback += `<li class="text-yellow-600">Moderate structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Consider significant adjustments to better align with your environment.</li>`;
+            } else {
+              feedback += `<li class="text-red-600">Poor structure-environment fit (${organizationalSuccess.toFixed(1)}/10). Major restructuring is recommended.</li>`;
+            }
+            
+            // Add specific fit scores
+            const scoreColor = (score) => score >= 7.5 ? "text-green-600" : score >= 5 ? "text-yellow-600" : "text-red-600";
+            
+            feedback += `
+              <li class="${scoreColor(industryFit)}">Industry alignment: ${industryFit.toFixed(1)}/10</li>
+              <li class="${scoreColor(sizeFit)}">Size appropriateness: ${sizeFit.toFixed(1)}/10</li>
+              <li class="${scoreColor(techFit)}">Technology compatibility: ${techFit.toFixed(1)}/10</li>
+              <li class="${scoreColor(competitionFit)}">Competitive responsiveness: ${competitionFit.toFixed(1)}/10</li>
+              <li class="${scoreColor(regulationFit)}">Regulatory alignment: ${regulationFit.toFixed(1)}/10</li>
+            `;
+            
+            feedback += `</ul>`;
+            
+            // Add recommendations
+            feedback += `<p><strong>Key Recommendations:</strong></p><ul>`;
+            
+            if (industryFit < 6) {
+              if (industryType > 7 && mechanisticScore > 6) {
+                feedback += `<li>For your dynamic industry, consider a more organic structure with less formalization and hierarchy.</li>`;
+              } else if (industryType < 4 && mechanisticScore < 4) {
+                feedback += `<li>For your stable industry, consider a more mechanistic structure with clearer procedures.</li>`;
+              }
+            }
+            
+            if (sizeFit < 6) {
+              if (companySize > 7 && hierarchyLevels < 4) {
+                feedback += `<li>For your large organization, consider adding appropriate hierarchy levels to improve coordination.</li>`;
+              } else if (companySize < 4 && hierarchyLevels > 7) {
+                feedback += `<li>For your small organization, flatten the hierarchy to reduce overhead and improve agility.</li>`;
+              }
+            }
+            
+            if (competition > 7 && hierarchyLevels > 7) {
+              feedback += `<li>In your highly competitive market, reduce decision-making layers to improve response times.</li>`;
+            }
+            
+            if (regulation > 7 && formalization < 4) {
+              feedback += `<li>In your highly regulated environment, increase formalization to ensure compliance.</li>`;
+            }
+            
+            if (customerPreferences > 7 && centralization > 7) {
+              feedback += `<li>For your customization-focused market, empower front-line employees with more decision-making authority.</li>`;
+            }
+            
+            if (feedback.endsWith("<ul>")) {
+              feedback += `<li>Current structure is well-aligned with your environment. Continue monitoring as conditions change.</li>`;
+            }
+            
+            feedback += `</ul>`;
+            
+            return {__html: feedback};
+          };
+
+          // Function to generate a new challenge scenario
+          const generateNewChallenge = () => {
+            // Pick a random scenario type (0-4)
+            const scenario = Math.floor(Math.random() * 5);
+            setChallengeNumber(prevChallenge => prevChallenge + 1);
+            
+            // Set environmental variables based on scenario
+            switch(scenario) {
+              case 0: // Tech startup
+                setIndustryType(9); // Highly dynamic
+                setCompanySize(3); // Small
+                setTechnology(8); // High-tech
+                setCompetition(8); // High competition
+                setCustomerPreferences(7); // Customized
+                setRegulation(2); // Low regulation
+                setScenarioDescription("Tech Startup: You're leading a small tech startup in a rapidly changing market with high competition. Create a structure that maximizes innovation and speed.");
+                break;
+              case 1: // Banking
+                setIndustryType(3); // Stable
+                setCompanySize(8); // Large
+                setTechnology(6); // Moderate tech
+                setCompetition(6); // Moderate competition
+                setCustomerPreferences(4); // Mix of mass/custom
+                setRegulation(9); // High regulation
+                setScenarioDescription("Banking Institution: You're managing a large bank in a highly regulated environment. Structure your organization to ensure compliance while maintaining customer satisfaction.");
+                break;
+              case 2: // Luxury brand
+                setIndustryType(5); // Moderately dynamic
+                setCompanySize(6); // Medium-large
+                setTechnology(5); // Moderate tech
+                setCompetition(7); // High competition
+                setCustomerPreferences(9); // Luxury/customized
+                setRegulation(4); // Moderate regulation
+                setScenarioDescription("Luxury Brand: You're running a premium luxury brand focusing on high-end, customized products. Balance creativity with operational excellence.");
+                break;
+              case 3: // Local restaurant chain
+                setIndustryType(4); // Fairly stable
+                setCompanySize(2); // Small
+                setTechnology(3); // Low-tech
+                setCompetition(8); // High competition
+                setCustomerPreferences(5); // Mix
+                setRegulation(5); // Moderate regulation
+                setScenarioDescription("Restaurant Chain: You're expanding a successful local restaurant into a regional chain. Design a structure that maintains quality while enabling growth.");
+                break;
+              case 4: // Manufacturing company
+                setIndustryType(3); // Stable
+                setCompanySize(7); // Large
+                setTechnology(7); // High automation
+                setCompetition(6); // Moderate competition
+                setCustomerPreferences(3); // Mass market
+                setRegulation(6); // Moderate-high regulation
+                setScenarioDescription("Manufacturing Company: You're running a large manufacturing operation with increasing automation. Balance efficiency with needed flexibility.");
+                break;
+            }
+            
+            // Reset structure variables to neutral values
+            setCentralization(5);
+            setFormalization(5);
+            setHierarchyLevels(5);
+            setSpanOfControl(5);
+            setDepartmentalization('functional');
+          };
+          
+          // Calculate organizational success based on all variables
+          React.useEffect(() => {
+            // Calculate mechanistic vs organic score
+            const mechanisticScore = (centralization + formalization + hierarchyLevels + (10 - spanOfControl)) / 4;
+            const organicScore = 10 - mechanisticScore;
+            
+            // Determine structure type
+            let newStructureType = "";
+            if (mechanisticScore > 7) newStructureType = "Highly Mechanistic";
+            else if (mechanisticScore > 5) newStructureType = "Moderately Mechanistic";
+            else if (mechanisticScore > 3) newStructureType = "Moderately Organic";
+            else newStructureType = "Highly Organic";
+            
+            // Additional modifier based on departmentalization
+            if (departmentalization === "matrix") newStructureType += " Matrix";
+            else if (departmentalization === "divisional") newStructureType += " Divisional";
+            else newStructureType += " Functional";
+            setStructureType(newStructureType);
+            
+            // Calculate fit scores for different factors
+            const industryFit = 10 - Math.abs(industryType - organicScore);
+            const sizeFit = 10 - Math.abs(companySize - mechanisticScore);
+            const techFit = technology > 5 ? 
+              (technology > 8 ? organicScore : (organicScore + mechanisticScore) / 2) : 
+              mechanisticScore;
+            const competitionFit = competition > 7 ? organicScore : mechanisticScore;
+            const customerFit = customerPreferences > 5 ? organicScore : mechanisticScore;
+            const regulationFit = regulation > 5 ? mechanisticScore : organicScore;
+            
+            // Overall success calculation
+            const success = (
+              industryFit * 2 + 
+              sizeFit * 1.5 + 
+              techFit * 1.5 + 
+              competitionFit * 2 + 
+              customerFit * 1.5 + 
+              regulationFit * 1.5
+            ) / 10;
+            
+            setOrganizationalSuccess(Math.min(Math.max(success, 0), 10));
+            
+            // Identify strengths and weaknesses
+            const newStrengthsWeaknesses = [];
+            
+            // Check specific combinations
+            if (industryType > 7 && mechanisticScore > 6) {
+              newStrengthsWeaknesses.push("Warning: Fast-changing industry with mechanistic structure may struggle to adapt");
+            }
+            
+            if (competition > 7 && hierarchyLevels > 7) {
+              newStrengthsWeaknesses.push("Warning: High competition with slow decision-making could lead to loss of market share");
+            }
+            
+            if (hierarchyLevels < 4 && companySize > 7) {
+              newStrengthsWeaknesses.push("Warning: Structure too flat for company size - may lead to coordination issues");
+            }
+            
+            if (industryType > 7 && technology > 7 && formalization > 7) {
+              newStrengthsWeaknesses.push("Warning: Creative/tech industry with high formalization may limit innovation");
+            }
+            
+            // Add strengths
+            if (industryFit > 7) {
+              newStrengthsWeaknesses.push("Strength: Structure well-aligned with industry dynamics");
+            }
+            
+            if (competitionFit > 7) {
+              newStrengthsWeaknesses.push("Strength: Structure appropriate for competitive environment");
+            }
+            
+            if (techFit > 7) {
+              newStrengthsWeaknesses.push("Strength: Structure supports technological environment");
+            }
+            
+            setStrengthsWeaknesses(newStrengthsWeaknesses);
+            
+          }, [centralization, formalization, hierarchyLevels, spanOfControl, departmentalization, 
+              industryType, companySize, technology, competition, customerPreferences, regulation]);
+
+          const getSuccessColor = () => {
+            if (organizationalSuccess >= 7.5) return "text-green-600";
+            if (organizationalSuccess >= 5) return "text-yellow-600";
+            return "text-red-600";
+          };
+
+          // Initialize with a scenario if none exists
+          React.useEffect(() => {
+            if (challengeNumber === 0 && scenarioDescription === "") {
+              generateNewChallenge();
+            }
+          }, [challengeNumber, scenarioDescription]);
+
+          return (
+            <div className="p-6 max-w-6xl mx-auto">
+              <h1 className="text-2xl font-bold mb-6">Organizational Structure Simulation</h1>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Organizational Structure Variables */}
+                <div className="bg-slate-50 p-6 rounded-lg shadow">
+                  <h2 className="text-xl font-semibold mb-4">Organizational Structure Variables</h2>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Centralization (Who makes decisions?)
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Low (Empowerment)</span>
+                        <span>High (Top-down)</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={centralization} 
+                        onChange={(e) => setCentralization(parseInt(e.target.value))} 
+                        className="w-full"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Formalization (How strict are the rules?)
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Low (Creativity)</span>
+                        <span>High (Procedures)</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={formalization} 
+                        onChange={(e) => setFormalization(parseInt(e.target.value))} 
+                        className="w-full"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Hierarchy Levels
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Flat (Fast decisions)</span>
+                        <span>Tall (More control)</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={hierarchyLevels} 
+                        onChange={(e) => setHierarchyLevels(parseInt(e.target.value))} 
+                        className="w-full"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Span of Control (Employees per manager)
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Narrow (Oversight)</span>
+                        <span>Wide (Autonomy)</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={spanOfControl} 
+                        onChange={(e) => setSpanOfControl(parseInt(e.target.value))} 
+                        className="w-full"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Departmentalization (How teams are grouped)
+                      <select 
+                        value={departmentalization} 
+                        onChange={(e) => setDepartmentalization(e.target.value)} 
+                        className="w-full mt-1 p-2 border border-gray-300 rounded"
+                      >
+                        <option value="functional">Functional (Specialized, efficient)</option>
+                        <option value="divisional">Divisional (Customer/product focused)</option>
+                        <option value="matrix">Matrix (Cross-functional, flexible but complex)</option>
+                      </select>
+                    </label>
+                  </div>
+                </div>
+                
+                {/* Environmental Factors */}
+                <div className="bg-slate-50 p-6 rounded-lg shadow">
+                  <h2 className="text-xl font-semibold mb-4">Environmental Factors</h2>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Industry Type
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Stable (Manufacturing)</span>
+                        <span>Dynamic (Tech)</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={industryType} 
+                        disabled
+     className="w-full opacity-70 cursor-not-allowed"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Company Size
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Small</span>
+                        <span>Large</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={companySize}
+                        disabled 
+                        className="w-full opacity-70 cursor-not-allowed"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Technology & Automation
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Low-tech</span>
+                        <span>High-tech</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={technology}
+                        disabled 
+                        className="w-full opacity-70 cursor-not-allowed"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Market Competition
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Low competition</span>
+                        <span>High competition</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={competition}
+                        disabled 
+                        className="w-full opacity-70 cursor-not-allowed"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Customer Preferences
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Mass-market</span>
+                        <span>Luxury/Customized</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={customerPreferences}
+                        disabled 
+                        className="w-full opacity-70 cursor-not-allowed"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <label className="block mb-2">
+                      Regulation & Legal Constraints
+                      <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                        <span>Less regulated</span>
+                        <span>Strictly regulated</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        min="1" 
+                        max="10" 
+                        value={regulation}
+                        disabled 
+                        className="w-full opacity-70 cursor-not-allowed"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> Environmental factors are fixed for each challenge scenario. Your task is to adjust the organizational structure to match these conditions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Visual Organization Chart */}
+              <div className="mt-8 bg-white p-6 rounded-lg shadow-lg">
+                <h2 className="text-xl font-semibold mb-4">Organization Visualization</h2>
+                <OrganizationChart 
+                  centralization={centralization}
+                  hierarchyLevels={hierarchyLevels}
+                  spanOfControl={spanOfControl}
+                  departmentalization={departmentalization}
+                />
+                <div className="grid grid-cols-3 gap-4 mt-4 text-sm">
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 rounded-full bg-blue-600 mr-2"></div>
+                    <span>Mechanistic Structure</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 rounded-full bg-green-600 mr-2"></div>
+                    <span>Organic Structure</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-4 h-4 rounded-full bg-purple-600 mr-2"></div>
+                    <span>Balanced Structure</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Game Mode */}
+              <div className="mt-8 bg-white p-6 rounded-lg shadow-lg border-t-4 border-purple-500">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Organization Builder Game</h2>
+                  <div className="flex gap-2">
+                    <button 
+                      className="bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
+                      onClick={() => {
+                        // Generate narrative feedback about the current structure
+                        setFeedbackShown(true);
+                      }}
+                    >
+                      Get Feedback
+                    </button>
+                    <button 
+                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                      onClick={() => {
+                        generateNewChallenge();
+                        setFeedbackShown(false);
+                      }}
+                    >
+                      New Challenge
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="p-4 bg-purple-50 rounded-lg mb-4">
+                  <h3 className="font-semibold mb-2">Challenge #{challengeNumber}: {scenarioDescription}</h3>
+                  <p className="mt-2">Your mission: Configure the optimal organizational structure to achieve the highest possible success score for this scenario. Can you reach 8.5 or higher?</p>
+                </div>
+                
+                <div className="bg-slate-50 p-4 rounded-lg mb-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-semibold">Current Score</h3>
+                    <div className="text-2xl font-bold px-4 py-1 rounded-lg bg-white shadow border-2" style={{borderColor: organizationalSuccess >= 8.5 ? '#16a34a' : '#64748b'}}>
+                      <span className={organizationalSuccess >= 8.5 ? 'text-green-600' : organizationalSuccess >= 7 ? 'text-yellow-600' : 'text-slate-600'}>
+                        {organizationalSuccess.toFixed(1)}
+                      </span>
+                      <span className="text-gray-400">/10</span>
+                    </div>
+                  </div>
+                  {organizationalSuccess >= 8.5 && (
+                    <div className="mt-2 p-2 bg-green-100 text-green-800 rounded">
+                      🎉 Congratulations! You've created an optimal organizational structure for this environment!
+                    </div>
+                  )}
+                </div>
+                
+                {feedbackShown && (
+                  <div className="bg-white p-4 rounded-lg border-l-4 border-blue-600 shadow mb-4">
+                    <h3 className="font-semibold text-lg mb-2">Executive Consultant Feedback</h3>
+                    <div className="prose" dangerouslySetInnerHTML={generateNarrativeFeedback()} />
+                  </div>
+                )}
+              </div>
+              
+              {/* Results Section */}
+              <div className="mt-8 bg-white p-6 rounded-lg shadow-lg border-t-4 border-blue-500">
+                <h2 className="text-xl font-semibold mb-4">Organizational Success Analysis</h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-slate-50 p-4 rounded shadow">
+                    <h3 className="font-semibold mb-2">Structure Type</h3>
+                    <p className="text-lg">{structureType}</p>
+                  </div>
+                  
+                  <div className="bg-slate-50 p-4 rounded shadow">
+                    <h3 className="font-semibold mb-2">Success Score</h3>
+                    <p className={`text-2xl font-bold ${getSuccessColor()}`}>
+                      {organizationalSuccess.toFixed(1)} / 10
+                    </p>
+                  </div>
+                  
+                  <div className="bg-slate-50 p-4 rounded shadow">
+                    <h3 className="font-semibold mb-2">Success Level</h3>
+                    <p className={`text-lg font-medium ${getSuccessColor()}`}>
+                      {organizationalSuccess >= 7.5 ? "High" : 
+                       organizationalSuccess >= 5 ? "Moderate" : "Low"}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-50 p-4 rounded shadow">
+                  <h3 className="font-semibold mb-2">Key Insights</h3>
+                  {strengthsWeaknesses.length > 0 ? (
+                    <ul className="list-disc pl-5">
+                      {strengthsWeaknesses.map((item, index) => (
+                        <li key={index} className={item.includes("Warning") ? "text-red-600" : "text-green-600"}>
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>No specific insights to report based on current configuration.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<OrganizationalStructureSimulation />);
+    </script>
+</body>
+</html>
